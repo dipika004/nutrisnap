@@ -37,6 +37,7 @@ export default function Home() {
         const stream = await navigator.mediaDevices.getUserMedia({video: true});
         setHasCameraPermission(true);
 
+        // Ensure stream is active before assigning to videoRef
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -91,7 +92,7 @@ export default function Home() {
   const handleScanFood = () => {
     setIsCameraActive(true);
     // Capture a frame from the video stream and set it as the image
-    if (videoRef.current && hasCameraPermission) {
+    if (videoRef.current && videoRef.current.srcObject) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
@@ -124,7 +125,7 @@ export default function Home() {
             <img src={image} alt="Uploaded Food" className="rounded-md object-contain max-h-48 w-full" />
           )}
 
-          <Button onClick={handleScanFood} disabled={loading || !hasCameraPermission}>
+         <Button onClick={handleScanFood} disabled={loading}>
             {loading ? "Scanning..." : "Scan Food"}
           </Button>
 
