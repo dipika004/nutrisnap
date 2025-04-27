@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { analyzeFoodImage, AnalyzeFoodImageOutput } from "@/ai/flows/analyze-food-image";
 import { Alert, AlertDescription as AD, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
@@ -27,6 +28,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -48,8 +51,10 @@ export default function Home() {
       }
     };
 
-    getCameraPermission();
-  }, []);
+    if (isCameraActive) {
+      getCameraPermission();
+    }
+  }, [isCameraActive, toast]);
 
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +70,7 @@ export default function Home() {
 
   const handleAnalyzeImage = async () => {
     if (!image) {
-      setError("Please upload an image.");
+      setError("Please upload an image or activate the camera.");
       return;
     }
 
@@ -83,6 +88,23 @@ export default function Home() {
     }
   };
 
+  const handleScanFood = () => {
+    setIsCameraActive(true);
+    // Capture a frame from the video stream and set it as the image
+    if (videoRef.current && hasCameraPermission) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg'); // You can change the format if needed
+        setImage(dataUrl);
+      }
+    }
+  };
+
+
   return (
     <div className="flex flex-col items-center justify-start min-h-screen py-12 bg-light-gray">
       <h1 className="text-4xl font-bold mb-8 text-primary">NutriSnap</h1>
@@ -91,7 +113,7 @@ export default function Home() {
       <Card className="w-full max-w-md space-y-4">
         <CardHeader>
           <CardTitle>Image Analysis</CardTitle>
-          <CardDescription>Upload an image of your food to analyze its macronutrients.</CardDescription>
+          <CardDescription>Upload an image of your food or use the camera to analyze its macronutrients.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col space-y-2">
@@ -102,9 +124,16 @@ export default function Home() {
             <img src={image} alt="Uploaded Food" className="rounded-md object-contain max-h-48 w-full" />
           )}
 
-          <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+          <Button onClick={handleScanFood} disabled={loading || !hasCameraPermission}>
+            {loading ? "Scanning..." : "Scan Food"}
+          </Button>
 
-          { !(hasCameraPermission) && (
+          {isCameraActive && hasCameraPermission && (
+            <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+          )}
+
+
+          {isCameraActive && !(hasCameraPermission) && (
             <Alert variant="destructive">
                       <AlertTitle>Camera Access Required</AlertTitle>
                       <AD>
@@ -114,7 +143,7 @@ export default function Home() {
           )
           }
 
-          <Button onClick={handleAnalyzeImage} disabled={loading}>
+          <Button onClick={handleAnalyzeImage} disabled={loading || !image}>
             {loading ? "Analyzing..." : "Analyze Image"}
           </Button>
         </CardContent>
