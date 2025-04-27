@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NutritionInfo } from "@/components/nutrition-info";
+import {useState} from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {NutritionInfo} from '@/components/nutrition-info';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,20 +22,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Alert, AlertDescription as AD, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { generateDietPlan, GenerateDietPlanOutput } from "@/ai/flows/generate-diet-plan";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { analyzeFoodImage, AnalyzeFoodImageOutput } from "@/ai/flows/analyze-food-image";
+} from '@/components/ui/alert-dialog';
+import {Alert, AlertDescription as AD, AlertTitle} from '@/components/ui/alert';
+import {useToast} from '@/hooks/use-toast';
+import {
+  generateDietPlan,
+  GenerateDietPlanOutput,
+} from '@/ai/flows/generate-diet-plan';
+import {Textarea} from '@/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  analyzeFoodImage,
+  AnalyzeFoodImageOutput,
+} from '@/ai/flows/analyze-food-image';
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
-  const [nutritionInfo, setNutritionInfo] = useState<AnalyzeFoodImageOutput | null>(null);
+  const [nutritionInfo, setNutritionInfo] =
+    useState<AnalyzeFoodImageOutput | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const {toast} = useToast();
 
   const [age, setAge] = useState<number | null>(null);
   const [gender, setGender] = useState<string | null>(null);
@@ -42,8 +64,12 @@ export default function Home() {
   const [healthGoal, setHealthGoal] = useState<string | null>(null);
   const [mealPreferences, setMealPreferences] = useState<string | null>('');
   const [snackingHabits, setSnackingHabits] = useState<string | null>('');
-  const [targetCaloricIntake, setTargetCaloricIntake] = useState<number | null>(null);
+  const [targetCaloricIntake, setTargetCaloricIntake] = useState<number | null>(
+    null
+  );
   const [dietPlan, setDietPlan] = useState<GenerateDietPlanOutput | null>(null);
+  const [recommendedProteinIntake, setRecommendedProteinIntake] =
+    useState<number | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,7 +84,7 @@ export default function Home() {
 
   const handleAnalyzeImage = async () => {
     if (!image) {
-      setError("Please upload an image.");
+      setError('Please upload an image.');
       return;
     }
 
@@ -67,10 +93,10 @@ export default function Home() {
     setNutritionInfo(null);
 
     try {
-      const result = await analyzeFoodImage({ photoDataUri: image });
+      const result = await analyzeFoodImage({photoDataUri: image});
       setNutritionInfo(result);
     } catch (e: any) {
-      setError(e.message || "Failed to analyze image. Please try again.");
+      setError(e.message || 'Failed to analyze image. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -80,6 +106,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setDietPlan(null);
+    setRecommendedProteinIntake(null);
 
     try {
       if (
@@ -90,7 +117,7 @@ export default function Home() {
         !activityLevel ||
         !targetCaloricIntake
       ) {
-        setError("Please fill in all required fields for the diet plan.");
+        setError('Please fill in all required fields for the diet plan.');
         return;
       }
 
@@ -99,18 +126,32 @@ export default function Home() {
         gender: gender as 'male' | 'female',
         height: height,
         weight: weight,
-        activityLevel: activityLevel as 'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'highlyActive',
+        activityLevel:
+          activityLevel as
+            | 'sedentary'
+            | 'lightlyActive'
+            | 'moderatelyActive'
+            | 'highlyActive',
         foodChoices: foodChoices || undefined,
         foodsToAvoid: foodsToAvoid || undefined,
         favoriteFoods: favoriteFoods || undefined,
-        healthGoal: healthGoal as 'weightLoss' | 'weightGain' | 'muscleBuilding' | 'overallHealth',
+        healthGoal:
+          healthGoal as
+            | 'weightLoss'
+            | 'weightGain'
+            | 'muscleBuilding'
+            | 'overallHealth',
         mealPreferences: mealPreferences || undefined,
         snackingHabits: snackingHabits || undefined,
         targetCaloricIntake: targetCaloricIntake,
       });
       setDietPlan(result);
+
+      // Calculate recommended protein intake
+      const proteinIntake = weight * 1.6; // Adjust factor as needed
+      setRecommendedProteinIntake(proteinIntake);
     } catch (e: any) {
-      setError(e.message || "Failed to generate diet plan. Please try again.");
+      setError(e.message || 'Failed to generate diet plan. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -124,15 +165,26 @@ export default function Home() {
       <Card className="w-full max-w-md mb-8 space-y-4">
         <CardHeader>
           <CardTitle>Analyze Food Image</CardTitle>
-          <CardDescription>Upload an image of your food to analyze its nutrients.</CardDescription>
+          <CardDescription>
+            Upload an image of your food to analyze its nutrients.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input type="file" accept="image/*" onChange={handleImageUpload} className="mb-4" />
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="mb-4"
+          />
           {image && (
-            <img src={image} alt="Food" className="rounded-md object-contain max-h-48 w-full mb-4" />
+            <img
+              src={image}
+              alt="Food"
+              className="rounded-md object-contain max-h-48 w-full mb-4"
+            />
           )}
           <Button onClick={handleAnalyzeImage} disabled={loading}>
-            {loading ? "Analyzing..." : "Analyze Image"}
+            {loading ? 'Analyzing...' : 'Analyze Image'}
           </Button>
           {nutritionInfo && (
             <NutritionInfo
@@ -148,21 +200,28 @@ export default function Home() {
       <Card className="w-full max-w-md mt-8 space-y-4">
         <CardHeader>
           <CardTitle>Generate Diet Plan</CardTitle>
-          <CardDescription>Enter your details to generate a personalized diet plan.</CardDescription>
+          <CardDescription>
+            Enter your details to generate a personalized diet plan.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col space-y-2">
               <Label htmlFor="age">Age</Label>
-              <Input id="age" type="number" value={age || ""} onChange={(e) => setAge(Number(e.target.value))} />
+              <Input
+                id="age"
+                type="number"
+                value={age || ''}
+                onChange={e => setAge(Number(e.target.value))}
+              />
             </div>
             <div className="flex flex-col space-y-2">
               <Label htmlFor="gender">Gender</Label>
               <select
                 id="gender"
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={gender || ""}
-                onChange={(e) => setGender(e.target.value)}
+                value={gender || ''}
+                onChange={e => setGender(e.target.value)}
               >
                 <option value="">Select</option>
                 <option value="male">Male</option>
@@ -171,19 +230,29 @@ export default function Home() {
             </div>
             <div className="flex flex-col space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
-              <Input id="height" type="number" value={height || ""} onChange={(e) => setHeight(Number(e.target.value))} />
+              <Input
+                id="height"
+                type="number"
+                value={height || ''}
+                onChange={e => setHeight(Number(e.target.value))}
+              />
             </div>
             <div className="flex flex-col space-y-2">
               <Label htmlFor="weight">Weight (kg)</Label>
-              <Input id="weight" type="number" value={weight || ""} onChange={(e) => setWeight(Number(e.target.value))} />
+              <Input
+                id="weight"
+                type="number"
+                value={weight || ''}
+                onChange={e => setWeight(Number(e.target.value))}
+              />
             </div>
             <div className="flex flex-col space-y-2">
               <Label htmlFor="activityLevel">Activity Level</Label>
               <select
                 id="activityLevel"
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={activityLevel || ""}
-                onChange={(e) => setActivityLevel(e.target.value)}
+                value={activityLevel || ''}
+                onChange={e => setActivityLevel(e.target.value)}
               >
                 <option value="">Select</option>
                 <option value="sedentary">Sedentary</option>
@@ -193,75 +262,141 @@ export default function Home() {
               </select>
             </div>
             <div className="flex flex-col space-y-2">
-              <Label htmlFor="targetCaloricIntake">Target Caloric Intake</Label>
-              <Input id="targetCaloricIntake" type="number" value={targetCaloricIntake || ""} onChange={(e) => setTargetCaloricIntake(Number(e.target.value))} />
+              <Label htmlFor="targetCaloricIntake">
+                Target Caloric Intake
+              </Label>
+              <Input
+                id="targetCaloricIntake"
+                type="number"
+                value={targetCaloricIntake || ''}
+                onChange={e => setTargetCaloricIntake(Number(e.target.value))}
+              />
             </div>
           </div>
           <div className="flex flex-col space-y-2">
-            <Label htmlFor="foodChoices">Food Choices (e.g., vegetarian)</Label>
-            <Input id="foodChoices" type="text" value={foodChoices || ""} onChange={(e) => setFoodChoices(e.target.value)} />
+            <Label htmlFor="foodChoices">
+              Food Choices (e.g., vegetarian)
+            </Label>
+            <Input
+              id="foodChoices"
+              type="text"
+              value={foodChoices || ''}
+              onChange={e => setFoodChoices(e.target.value)}
+            />
           </div>
-           <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="foodsToAvoid">Foods to Avoid</Label>
-            <Input id="foodsToAvoid" type="text" value={foodsToAvoid || ""} onChange={(e) => setFoodsToAvoid(e.target.value)} />
+            <Input
+              id="foodsToAvoid"
+              type="text"
+              value={foodsToAvoid || ''}
+              onChange={e => setFoodsToAvoid(e.target.value)}
+            />
           </div>
           <div className="flex flex-col space-y-2">
             <Label htmlFor="favoriteFoods">Favorite Foods</Label>
-            <Input id="favoriteFoods" type="text" value={favoriteFoods || ""} onChange={(e) => setFavoriteFoods(e.target.value)} />
+            <Input
+              id="favoriteFoods"
+              type="text"
+              value={favoriteFoods || ''}
+              onChange={e => setFavoriteFoods(e.target.value)}
+            />
           </div>
           <div className="flex flex-col space-y-2">
-              <Label htmlFor="healthGoal">Health Goal</Label>
-              <select
-                id="healthGoal"
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={healthGoal || ""}
-                onChange={(e) => setHealthGoal(e.target.value)}
-              >
-                <option value="">Select</option>
-                <option value="weightLoss">Weight Loss</option>
-                <option value="weightGain">Weight Gain</option>
-                <option value="muscleBuilding">Muscle Building</option>
-                <option value="overallHealth">Overall Health</option>
-              </select>
-            </div>
-             <div className="flex flex-col space-y-2">
-            <Label htmlFor="mealPreferences">Meal Preferences</Label>
-            <Input id="mealPreferences" type="text" value={mealPreferences || ""} onChange={(e) => setMealPreferences(e.target.value)} />
+            <Label htmlFor="healthGoal">Health Goal</Label>
+            <select
+              id="healthGoal"
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={healthGoal || ''}
+              onChange={e => setHealthGoal(e.target.value)}
+            >
+              <option value="">Select</option>
+              <option value="weightLoss">Weight Loss</option>
+              <option value="weightGain">Weight Gain</option>
+              <option value="muscleBuilding">Muscle Building</option>
+              <option value="overallHealth">Overall Health</option>
+            </select>
           </div>
-           <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-2">
+            <Label htmlFor="mealPreferences">Meal Preferences</Label>
+            <Input
+              id="mealPreferences"
+              type="text"
+              value={mealPreferences || ''}
+              onChange={e => setMealPreferences(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="snackingHabits">Snacking Habits</Label>
-            <Input id="snackingHabits" type="text" value={snackingHabits || ""} onChange={(e) => setSnackingHabits(e.target.value)} />
+            <Input
+              id="snackingHabits"
+              type="text"
+              value={snackingHabits || ''}
+              onChange={e => setSnackingHabits(e.target.value)}
+            />
           </div>
 
           <Button onClick={handleGenerateDietPlan} disabled={loading}>
-            {loading ? "Generating..." : "Generate Diet Plan"}
+            {loading ? 'Generating...' : 'Generate Diet Plan'}
           </Button>
         </CardContent>
       </Card>
 
+      {/* Display Recommended Protein Intake */}
+      {recommendedProteinIntake && (
+        <div className="mt-8 w-full max-w-full overflow-x-auto">
+          {' '}
+          {/* Updated to full width and added overflow */}
+          <h2 className="text-2xl font-semibold mb-4 text-primary">
+            Recommended Protein Intake
+          </h2>
+          <Card>
+            <CardContent className="p-4">
+              {' '}
+              {/* Reduced padding for better spacing */}
+              <p>
+                Based on your weight, the recommended daily protein intake is:{' '}
+                {recommendedProteinIntake.toFixed(2)} grams.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Display Diet Plan */}
       {dietPlan && (
-        <div className="mt-8 w-full max-w-full overflow-x-auto"> {/* Updated to full width and added overflow */}
-          <h2 className="text-2xl font-semibold mb-4 text-primary">Diet Plan</h2>
+        <div className="mt-8 w-full max-w-full overflow-x-auto">
+          {' '}
+          {/* Updated to full width and added overflow */}
+          <h2 className="text-2xl font-semibold mb-4 text-primary">
+            Diet Plan
+          </h2>
           <Card>
-            <CardContent className="p-4"> {/* Reduced padding for better spacing */}
+            <CardContent className="p-4">
+              {' '}
+              {/* Reduced padding for better spacing */}
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[15%]">Meal Time</TableHead> {/* Adjusted widths */}
+                    <TableHead className="w-[15%]">Meal Time</TableHead>{' '}
+                    {/* Adjusted widths */}
                     <TableHead className="w-[25%]">Food Items</TableHead>
                     <TableHead className="w-[15%]">Portion Size</TableHead>
                     <TableHead className="w-[10%]">Calories</TableHead>
                     <TableHead className="w-[10%]">Protein (g)</TableHead>
                     <TableHead className="w-[10%]">Carbs (g)</TableHead>
                     <TableHead className="w-[10%]">Fats (g)</TableHead>
-                    <TableHead className="w-[15%]">Micronutrient Focus</TableHead>
+                    <TableHead className="w-[15%]">
+                      Micronutrient Focus
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {dietPlan.dietPlan.map((meal, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{meal.mealTime}</TableCell>
+                      <TableCell className="font-medium">
+                        {meal.mealTime}
+                      </TableCell>
                       <TableCell>{meal.foodItems}</TableCell>
                       <TableCell>{meal.portionSize}</TableCell>
                       <TableCell>{meal.calories}</TableCell>
