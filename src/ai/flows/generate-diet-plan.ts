@@ -27,8 +27,19 @@ const GenerateDietPlanInputSchema = z.object({
 });
 export type GenerateDietPlanInput = z.infer<typeof GenerateDietPlanInputSchema>;
 
+const MealSchema = z.object({
+  mealTime: z.string().describe('The time of the meal (e.g., Breakfast, Lunch, Dinner, Snack).'),
+  foodItems: z.string().describe('The food items in the meal (e.g., Oats, Chicken, Vegetables).'),
+  portionSize: z.string().describe('The portion size of the food items (e.g., 1 cup, 150 grams).'),
+  calories: z.number().describe('The number of calories in the meal.'),
+  protein: z.number().describe('The amount of protein in grams.'),
+  carbs: z.number().describe('The amount of carbohydrates in grams.'),
+  fat: z.number().describe('The amount of fat in grams.'),
+  micronutrientFocus: z.string().optional().describe('The micronutrient focus of the meal (e.g., High in Protein, Low in Carbs, Rich in Fiber).'),
+});
+
 const GenerateDietPlanOutputSchema = z.object({
-  dietPlan: z.string().describe('A personalized diet plan for the user in a table format.'),
+  dietPlan: z.array(MealSchema).describe('A personalized diet plan for the user.'),
 });
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
@@ -56,20 +67,22 @@ const prompt = ai.definePrompt({
   },
   output: {
     schema: z.object({
-      dietPlan: z.string().describe('A personalized diet plan for the user in a table format.'),
+      dietPlan: z.array(MealSchema).describe('A personalized diet plan for the user.'),
     }),
   },
   prompt: `You are an expert nutritionist. You will be given information about a user, including their age, gender, height, weight, activity level, dietary preferences, and health goals.
 
-You will use this information to generate a detailed and personalized diet plan for the user in a table format. The diet plan should be safe, healthy, effective, easy to follow, and sustainable in the long term.
+You will use this information to generate a detailed and personalized diet plan for the user. The diet plan should be safe, healthy, effective, easy to follow, and sustainable in the long term.
 
-The table should include the following columns:
-- Meal Time (e.g., Breakfast, Lunch, Dinner, Snack)
-- Food Items (e.g., Oats, Chicken, Vegetables, etc.)
-- Portion Size (e.g., 1 cup, 150 grams, etc.)
-- Calories (calories per meal)
-- Macronutrient Breakdown (Protein, Carbs, Fats)
-- Micronutrient Focus (e.g., High in Protein, Low in Carbs, Rich in Fiber)
+Return the diet plan as a JSON array, where each object in the array represents a meal and has the following keys:
+- mealTime: The time of the meal (e.g., Breakfast, Lunch, Dinner, Snack).
+- foodItems: The food items in the meal (e.g., Oats, Chicken, Vegetables).
+- portionSize: The portion size of the food items (e.g., 1 cup, 150 grams).
+- calories: The number of calories in the meal.
+- protein: The amount of protein in grams.
+- carbs: The amount of carbohydrates in grams.
+- fat: The amount of fat in grams.
+- micronutrientFocus: The micronutrient focus of the meal (e.g., High in Protein, Low in Carbs, Rich in Fiber).
 
 Here is the user's information:
 Age: {{{age}}}
@@ -85,7 +98,7 @@ Meal Preferences: {{{mealPreferences}}}
 Snacking Habits: {{{snackingHabits}}}
 Target Caloric Intake: {{{targetCaloricIntake}}}
 
-Please generate the diet plan in a markdown table format.
+Please generate the diet plan in JSON format.
 `,
 });
 
