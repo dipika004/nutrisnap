@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
     // If necessary, add .hbs to the list of file extensions Webpack should resolve
     config.resolve.extensions.push('.hbs');
 
+    config.resolve.fallback = {
+      ...(config.resolve.fallback || {}),
+      extensions: false,
+    };
+  
+
     return config;  // Return the modified Webpack configuration
   },
 };
