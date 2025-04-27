@@ -22,10 +22,11 @@ import { useToast } from "@/hooks/use-toast";
 import { generateDietPlan, GenerateDietPlanOutput } from "@/ai/flows/generate-diet-plan";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { analyzeFoodImage, AnalyzeFoodImageOutput } from "@/ai/flows/analyze-food-image";
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
-  const [nutritionInfo, setNutritionInfo] = useState<any | null>(null);
+  const [nutritionInfo, setNutritionInfo] = useState<AnalyzeFoodImageOutput | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -57,7 +58,7 @@ export default function Home() {
 
   const handleAnalyzeImage = async () => {
     if (!image) {
-      setError("Please upload an image or activate the camera.");
+      setError("Please upload an image.");
       return;
     }
 
@@ -65,6 +66,14 @@ export default function Home() {
     setError(null);
     setNutritionInfo(null);
 
+    try {
+      const result = await analyzeFoodImage({ photoDataUri: image });
+      setNutritionInfo(result);
+    } catch (e: any) {
+      setError(e.message || "Failed to analyze image. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGenerateDietPlan = async () => {
@@ -84,6 +93,7 @@ export default function Home() {
         setError("Please fill in all required fields for the diet plan.");
         return;
       }
+
       const result = await generateDietPlan({
         age: age,
         gender: gender as 'male' | 'female',
@@ -109,6 +119,30 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen py-12 bg-light-gray">
       <h1 className="text-4xl font-bold mb-8 text-primary">NutriSnap</h1>
+
+      {/* Image Analysis Card */}
+      <Card className="w-full max-w-md mb-8 space-y-4">
+        <CardHeader>
+          <CardTitle>Analyze Food Image</CardTitle>
+          <CardDescription>Upload an image of your food to analyze its nutrients.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input type="file" accept="image/*" onChange={handleImageUpload} className="mb-4" />
+          {image && (
+            <img src={image} alt="Food" className="rounded-md object-contain max-h-48 w-full mb-4" />
+          )}
+          <Button onClick={handleAnalyzeImage} disabled={loading}>
+            {loading ? "Analyzing..." : "Analyze Image"}
+          </Button>
+          {nutritionInfo && (
+            <NutritionInfo
+              name={nutritionInfo.foodItem.name}
+              nutrition={nutritionInfo.foodItem.nutrition}
+              image={image}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Diet Plan Form */}
       <Card className="w-full max-w-md mt-8 space-y-4">
