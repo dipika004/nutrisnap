@@ -48,7 +48,7 @@ export default function Home() {
     setNutritionInfo(null);
 
     try {
-      const result = await analyzeFoodImage({ photoDataUri: image });
+      const result = await analyzeFoodImage({ photoDataUri: image, description: "" });
       setNutritionInfo(result);
     } catch (e: any) {
       setError(e.message || "Failed to analyze image. Please try again.");
@@ -62,20 +62,23 @@ export default function Home() {
       setError("Please enter a description of the food.");
       return;
     }
-
+  
     setLoading(true);
     setError(null);
     setNutritionInfo(null);
-
+  
     try {
-      const result = await analyzeFoodImage({ photoDataUri: "", description: foodDescription });
+      const result = await analyzeFoodImage({ 
+        photoDataUri: "", // No image data
+        description: foodDescription // Description is passed
+      });
       setNutritionInfo(result);
     } catch (e: any) {
       setError(e.message || "Failed to analyze food. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen py-12 bg-light-gray">
@@ -101,26 +104,27 @@ export default function Home() {
       </Card>
 
       <Card className="w-full max-w-md space-y-4 mt-8">
-        <CardHeader>
-          <CardTitle>Manual Entry</CardTitle>
-          <CardDescription>Alternatively, enter a description of the food item.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <Label htmlFor="description">Food Description</Label>
-            <Input
-              id="description"
-              type="text"
-              placeholder="e.g., apple, chicken breast"
-              value={foodDescription}
-              onChange={(e) => setFoodDescription(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleManualEntry} disabled={loading}>
-            {loading ? "Analyzing..." : "Analyze Description"}
-          </Button>
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle>Manual Entry</CardTitle>
+    <CardDescription>Alternatively, enter a description of the food item.</CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="flex flex-col space-y-2">
+      <Label htmlFor="description">Food Description</Label>
+      <Input
+        id="description"
+        type="text"
+        placeholder="e.g., apple, chicken breast"
+        value={foodDescription}
+        onChange={(e) => setFoodDescription(e.target.value)}
+      />
+    </div>
+    <Button onClick={handleManualEntry} disabled={loading}>
+      {loading ? "Analyzing..." : "Analyze Description"}
+    </Button>
+  </CardContent>
+</Card>
+
 
       {nutritionInfo && (
         <div className="mt-8">
