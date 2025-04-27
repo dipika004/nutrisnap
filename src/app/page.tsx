@@ -169,7 +169,7 @@ export default function Home() {
       {nutritionInfo && (
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-4 text-primary">Nutrition Information</h2>
-          <NutritionInfo nutrition={nutritionInfo.foodItem.nutrition} name={nutritionInfo.foodItem.name} />
+          <NutritionInfo nutrition={nutritionInfo.foodItem.nutrition} name={nutritionInfo.foodItem.name} image={image}/>
         </div>
       )}
 
