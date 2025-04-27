@@ -207,27 +207,27 @@ export default function Home() {
 
       {/* Display Diet Plan */}
       {dietPlan && (
-        <div className="mt-8 w-full max-w-md">
+        <div className="mt-8 w-full max-w-full overflow-x-auto"> {/* Updated to full width and added overflow */}
           <h2 className="text-2xl font-semibold mb-4 text-primary">Diet Plan</h2>
           <Card>
-            <CardContent>
+            <CardContent className="p-4"> {/* Reduced padding for better spacing */}
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Meal Time</TableHead>
-                    <TableHead>Food Items</TableHead>
-                    <TableHead>Portion Size</TableHead>
-                    <TableHead>Calories</TableHead>
-                    <TableHead>Protein (g)</TableHead>
-                    <TableHead>Carbs (g)</TableHead>
-                    <TableHead>Fats (g)</TableHead>
-                    <TableHead>Micronutrient Focus</TableHead>
+                    <TableHead className="w-[15%]">Meal Time</TableHead> {/* Adjusted widths */}
+                    <TableHead className="w-[25%]">Food Items</TableHead>
+                    <TableHead className="w-[15%]">Portion Size</TableHead>
+                    <TableHead className="w-[10%]">Calories</TableHead>
+                    <TableHead className="w-[10%]">Protein (g)</TableHead>
+                    <TableHead className="w-[10%]">Carbs (g)</TableHead>
+                    <TableHead className="w-[10%]">Fats (g)</TableHead>
+                    <TableHead className="w-[15%]">Micronutrient Focus</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {dietPlan.dietPlan.map((meal, index) => (
                     <TableRow key={index}>
-                      <TableCell>{meal.mealTime}</TableCell>
+                      <TableCell className="font-medium">{meal.mealTime}</TableCell>
                       <TableCell>{meal.foodItems}</TableCell>
                       <TableCell>{meal.portionSize}</TableCell>
                       <TableCell>{meal.calories}</TableCell>
