@@ -3,10 +3,10 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true,  // Allows TypeScript errors to be ignored during the build
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true,  // Ignores ESLint errors during the build process
   },
   images: {
     remotePatterns: [
@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'picsum.photos',
         port: '',
-        pathname: '/**',
+        pathname: '/**', // Allows loading images from picsum.photos
       },
     ],
   },
