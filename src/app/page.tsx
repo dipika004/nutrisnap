@@ -34,10 +34,9 @@ export default function Home() {
   useEffect(() => {
     const getCameraPermission = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({video: true});
+        const stream = await navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }});
         setHasCameraPermission(true);
 
-        // Ensure stream is active before assigning to videoRef
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -52,9 +51,17 @@ export default function Home() {
       }
     };
 
+
     if (isCameraActive) {
       getCameraPermission();
     }
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
   }, [isCameraActive, toast]);
 
 
@@ -91,19 +98,22 @@ export default function Home() {
 
   const handleScanFood = () => {
     setIsCameraActive(true);
-    // Capture a frame from the video stream and set it as the image
-    if (videoRef.current && videoRef.current.srcObject) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg'); // You can change the format if needed
-        setImage(dataUrl);
-      }
-    }
   };
+
+    const handleCapture = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg');
+                setImage(dataUrl);
+                setIsCameraActive(false);
+            }
+        }
+    };
 
 
   return (
@@ -125,12 +135,17 @@ export default function Home() {
             <img src={image} alt="Uploaded Food" className="rounded-md object-contain max-h-48 w-full" />
           )}
 
-         <Button onClick={handleScanFood} disabled={loading}>
-            {loading ? "Scanning..." : "Scan Food"}
+         <Button onClick={handleScanFood} disabled={loading || isCameraActive}>
+            {loading ? "Loading..." : "Scan Food"}
           </Button>
 
           {isCameraActive && hasCameraPermission && (
-            <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+            <>
+              <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+              <Button onClick={handleCapture} disabled={loading}>
+                {loading ? "Capturing..." : "Capture"}
+              </Button>
+            </>
           )}
 
 
