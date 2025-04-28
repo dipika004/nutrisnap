@@ -44,6 +44,8 @@ import {
   analyzeFoodImage,
   AnalyzeFoodImageOutput,
 } from '@/ai/flows/analyze-food-image';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
@@ -155,6 +157,80 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownloadDietPlan = () => {
+    if (!dietPlan) {
+      setError('No diet plan to download.');
+      return;
+    }
+
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Your Personalized Diet Plan', 14, 22);
+
+    doc.setFontSize(12);
+    let y = 40; // Starting Y position
+
+    if (recommendedProteinIntake) {
+      doc.text(`Recommended Protein Intake: ${recommendedProteinIntake.toFixed(2)} grams`, 14, y);
+      y += 10;
+    }
+
+    // Define table headers
+    const tableColumnTitles = [
+      'Meal Time',
+      'Food Items',
+      'Portion Size',
+      'Calories',
+      'Protein (g)',
+      'Carbs (g)',
+      'Fats (g)',
+      'Micronutrient Focus',
+    ];
+
+    // Prepare table data
+    const tableData = dietPlan.dietPlan.map(meal => [
+      meal.mealTime,
+      meal.foodItems,
+      meal.portionSize,
+      meal.calories.toString(),
+      meal.protein.toString(),
+      meal.carbs.toString(),
+      meal.fat.toString(),
+      meal.micronutrientFocus || '',
+    ]);
+
+    // Add table to PDF
+    (doc as any).autoTable({
+      head: [tableColumnTitles],
+      body: tableData,
+      startY: y,
+      margin: {horizontal: 14},
+      columnStyles: {
+        0: {cellWidth: 20}, // Meal Time
+        1: {cellWidth: 40}, // Food Items
+        2: {cellWidth: 20}, // Portion Size
+        3: {cellWidth: 15}, // Calories
+        4: {cellWidth: 15}, // Protein
+        5: {cellWidth: 15}, // Carbs
+        6: {cellWidth: 15}, // Fats
+        7: {cellWidth: 30}, // Micronutrient Focus
+      },
+      styles: {
+        fontSize: 8,
+        overflow: 'linebreak',
+        tableWidth: 'auto',
+      },
+      headerStyles: {
+        fillColor: '#4CAF50', // Primary color (fresh green)
+        textColor: '#FFFFFF',
+        fontSize: 9,
+        fontStyle: 'bold',
+      },
+    });
+
+    doc.save('diet_plan.pdf');
   };
 
   return (
@@ -412,6 +488,11 @@ export default function Home() {
           </Card>
         </div>
       )}
+            {dietPlan && (
+        <Button onClick={handleDownloadDietPlan} disabled={loading}>
+          Download Diet Plan (PDF)
+        </Button>
+      )}
 
       {/* Error Dialog */}
       {error && (
@@ -434,3 +515,4 @@ export default function Home() {
     </div>
   );
 }
+
